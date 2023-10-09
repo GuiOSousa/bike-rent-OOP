@@ -14,6 +14,7 @@ import { UserRepo } from "../src/ports/user-repo";
 import { BikeRepo } from "../src/ports/bike-repo";
 import { RentRepo } from "../src/ports/rent-repo";
 import { RentNotFoundError } from "../src/errors/rent-not-found-error";
+import { UserHasOpenRentsError } from "../src/errors/user-open-rents-error";
 
 let userRepo: FakeUserRepo;
 let bikeRepo: FakeBikeRepo;
@@ -170,6 +171,25 @@ describe("App", () => {
     await app.registerUser(user);
     await app.removeUser(user.email);
     await expect(app.findUser(user.email)).rejects.toThrow(UserNotFoundError);
+  });
+
+  it("should throw user has open rents error", async () => {
+    const app = new App(userRepo, bikeRepo, rentRepo);
+    const user = new User("jose", "jose@mail.com", "1234");
+    const bike = new Bike(
+      "caloi mountainbike",
+      "mountain bike",
+      1234,
+      1234,
+      100.0,
+      "My bike",
+      5,
+      []
+    );
+    await app.registerUser(user);
+    await app.rentBike(bike.id, user.email)
+    await app.removeUser(user.email);
+    await expect(app.findUser(user.email)).rejects.toThrow(UserHasOpenRentsError);
   });
 
   it("should throw user not found error when trying to remove an unregistered user", async () => {
