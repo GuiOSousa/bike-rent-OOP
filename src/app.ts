@@ -13,37 +13,37 @@ import { BikeRepo } from "./ports/bike-repo";
 import { UserHasOpenRentError } from "./errors/user-has-open-rent-error";
 
 export class App {
-    crypt: Crypt = new Crypt()
+  crypt: Crypt = new Crypt();
 
-    constructor(
-        readonly userRepo: UserRepo,
-        readonly bikeRepo: BikeRepo,
-        readonly rentRepo: RentRepo
-    ) {}
+  constructor(
+    readonly userRepo: UserRepo,
+    readonly bikeRepo: BikeRepo,
+    readonly rentRepo: RentRepo
+  ) {}
 
-    async findUser(email: string): Promise<User> {
-        const user = await this.userRepo.find(email)
-        if (!user) throw new UserNotFoundError()
-        return user
+  async findUser(email: string): Promise<User> {
+    const user = await this.userRepo.find(email);
+    if (!user) throw new UserNotFoundError();
+    return user;
+  }
+
+  async registerUser(user: User): Promise<string> {
+    if (await this.userRepo.find(user.email)) {
+      throw new DuplicateUserError();
     }
+    const encryptedPassword = await this.crypt.encrypt(user.password);
+    user.password = encryptedPassword;
+    return await this.userRepo.add(user);
+  }
 
-    async registerUser(user: User): Promise<string> {
-        if (await this.userRepo.find(user.email)) {
-          throw new DuplicateUserError()
-        }
-        const encryptedPassword = await this.crypt.encrypt(user.password)
-        user.password = encryptedPassword
-        return await this.userRepo.add(user)
-    }
+  async authenticate(userEmail: string, password: string): Promise<boolean> {
+    const user = await this.findUser(userEmail);
+    return await this.crypt.compare(password, user.password);
+  }
 
-    async authenticate(userEmail: string, password: string): Promise<boolean> {
-        const user = await this.findUser(userEmail)
-        return await this.crypt.compare(password, user.password)
-    }
-
-    async registerBike(bike: Bike): Promise<string> {
-        return await this.bikeRepo.add(bike)
-    }
+  async registerBike(bike: Bike): Promise<string> {
+    return await this.bikeRepo.add(bike);
+  }
 
     async removeUser(email: string): Promise<void> {
         await this.findUser(email)
@@ -74,28 +74,28 @@ export class App {
         return hours * rent.bike.rate
     }
 
-    async listUsers(): Promise<User[]> {
-        return await this.userRepo.list()
-    }
+  async listUsers(): Promise<User[]> {
+    return await this.userRepo.list();
+  }
 
-    async listBikes(): Promise<Bike[]> {
-        return await this.bikeRepo.list()
-    }
+  async listBikes(): Promise<Bike[]> {
+    return await this.bikeRepo.list();
+  }
 
     async moveBikeTo(bikeId: string, location: Location) {
         await this.findBike(bikeId)
         await this.bikeRepo.updateLocation(bikeId, location.latitude, location.longitude)
     }
 
-    async findBike(bikeId: string): Promise<Bike> {
-        const bike = await this.bikeRepo.find(bikeId)
-        if (!bike) throw new BikeNotFoundError()
-        return bike
-    }
+  async findBike(bikeId: string): Promise<Bike> {
+    const bike = await this.bikeRepo.find(bikeId);
+    if (!bike) throw new BikeNotFoundError();
+    return bike;
+  }
 }
 
 function diffHours(dt2: Date, dt1: Date) {
   var diff = (dt2.getTime() - dt1.getTime()) / 1000;
-  diff /= (60 * 60);
+  diff /= 60 * 60;
   return Math.abs(diff);
 }

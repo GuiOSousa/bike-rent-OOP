@@ -16,9 +16,9 @@ import { RentRepo } from "../src/ports/rent-repo"
 import { UserHasOpenRentError } from "../src/errors/user-has-open-rent-error"
 
 
-let userRepo: UserRepo
-let bikeRepo: BikeRepo
-let rentRepo: RentRepo
+let userRepo: FakeUserRepo;
+let bikeRepo: FakeBikeRepo;
+let rentRepo: FakeRentRepo;
 
 describe('App', () => {
     beforeEach(() => {
